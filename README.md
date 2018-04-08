@@ -1,2 +1,3 @@
 # tiddalik
-Parkes Single Pulse Pipeline
+Parkes multi-node processing pipelines
+
