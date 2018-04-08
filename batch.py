@@ -68,7 +68,7 @@ def run_parallel(function, args, n_workers=2):
         result = executor.map(function, *args)
 
 
-def default_argparser():
+def default_argparser(ext='fil'):
     """ Default argparser for batch scripts 
 
     Returns an argparser with input directory, output directory, file extension
@@ -78,8 +78,8 @@ def default_argparser():
     parser = argparse.ArgumentParser()
     parser.add_argument("indir", help="Input directory to read from")
     parser.add_argument("outdir", help="Output directory to write to")
-    parser.add_argument("-e", "--extension", help="extension to look for. Default 0000.fil", 
-                        default='0000.fil')
+    parser.add_argument("-e", "--extension", help="extension to look for. Default %s" % ext, 
+                        default=ext)
     parser.add_argument("-n", "--nparallel", help="Number of files to process in parallel. Default 1",
                        type=int, default=1)
     return parser

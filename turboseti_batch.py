@@ -34,7 +34,7 @@ def run_turboseti(outdir, filename):
 if __name__ == "__main__":
     # Setup Argument parsing from defaults
     import os
-    parser = default_argparser()
+    parser = default_argparser(ext='0000.fil')
     args = parser.parse_args()    
     
     # Generate file list from glob
