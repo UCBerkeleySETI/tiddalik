@@ -57,3 +57,4 @@ beam_mapping = {
 LDL = 'LD_LIBRARY_PATH=/usr/local/gcc-5.4/lib64/:/usr/local/cuda-8.0/lib64:/usr/local/lib:/usr/local/hdf5/lib:/usr/local/lib'
 DCPY = 'source /opt/pyve/activate dcpy; '
 
+sigproc_sum_fil_path = '/usr/local/sigproc/bin/sum_fil'
