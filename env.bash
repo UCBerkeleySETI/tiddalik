@@ -29,7 +29,7 @@ export PATH=/usr/local/gcc-5.4/bin:$PATH
 
 
 # PYTHON VIRTUALENV
-. /opt/pyve/activate dcpy
+. /opt/pyve/activate obs
 
 # ALIAS 4 PULSRZ
 export pulsar_me='source /usr/local/pulsar64/pulsar.bash'

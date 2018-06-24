@@ -9,10 +9,11 @@ extended_nodes += ['blc30', 'blc31', 'blc32']
 
 storage_nodes = ['bls0', 'bls1', 'bls2', 'bls3']
 all_nodes = extended_nodes + storage_nodes
-all_nodes = all_nodes[1:]
+#all_nodes = all_nodes[1:]
 
 # Don't use MB00!
-mb_nodes = extended_nodes[1:]
+#mb_nodes = extended_nodes[1:]
+mb_nodes = extended_nodes[0:]
 
 storage_10gb = {
     #'bls0': '10.10.10.32',

@@ -21,13 +21,16 @@ def run_turboseti(outdir, filename):
     """
     time.sleep(random.random())
     bname = os.path.basename(filename)
-    lname = os.path.splitext(bname)[0] + '.lock'
+    lname = os.path.splitext(bname)[0] + '.turboseti.lock'
     lname = os.path.join(outdir, lname)
-    #lname = os.path,join(outdir, lname)
+    cname = os.path.splitext(bname)[0] + '.turboseti.complete'
+    cname = os.path.join(outdir, cname)
+
     if not os.path.exists(lname):
         os.system('touch %s' % lname) 
         print("CMD: turboSETI %s %s -M 4 -s 10 " % (filename, outdir))
         sp_execute(["turboSETI %s -o %s -M 4 -s 10 " % (filename, outdir)])
+        os.system('touch %s' % cname)
     time.sleep(random.random())
    
 
