@@ -6,11 +6,24 @@ import sys
 import time
 import glob
 import itertools
+import blimpy as bl
+
+def is_10cm_data(filename):
+    a = bl.Waterfall(filename, load_data=False)
+    f0 = a.header['fch1'] 
+    print(f0)
+
+    if 2500 < f0 < 3500:
+        return True
+    else:
+        return False
 
 def run_parkes_chain(outdir, filename):
-    execute(["./parkes_chain %s %s" % (filename, outdir)])
-    #execute(["echo %s %s" % (filename, outdir)])
-    time.sleep(0.1)
+    if is_10cm_data(filename): 
+        execute(["./parkes_chain %s %s" % (filename, outdir)])
+    else:
+        print("WARNING: %s is not 10CM data, skipping..." % filename)
+    time.sleep(0.01)
 
 def execute(command):
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)

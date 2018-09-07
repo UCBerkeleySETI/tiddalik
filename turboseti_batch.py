@@ -37,16 +37,19 @@ def run_turboseti(outdir, filename):
 if __name__ == "__main__":
     # Setup Argument parsing from defaults
     import os
-    parser = default_argparser(ext='0000.fil')
-    args = parser.parse_args()    
-    
+    import glob
+    #parser = default_argparser(ext='0000.fil')
+    parser = default_argparser(ext='hires.hdf')
+    args = parser.parse_args()  
     # Generate file list from glob
-    search_str = os.path.join(args.indir, '*.%s' % args.extension)
-    filelist = glob.glob(search_str)
-    out_filelist = [args.outdir for ii in range(len(filelist))]
+    dirlist = sorted(glob.glob(os.path.join(args.indir, '*/')))
+    for dirpath in dirlist:
+        search_str = os.path.join(dirpath, '*.%s' % args.extension)
+        filelist = glob.glob(search_str)
+        out_filelist = [dirpath for ii in range(len(filelist))]
     
-    print("Search path: %s " %search_str)
-    print("Number of matching files: %s" % len(filelist))
+        print("Search path: %s " %search_str)
+        print("Number of matching files: %s" % len(filelist))
 
-    run_parallel(run_turboseti, (out_filelist, filelist), n_workers=args.nparallel)
+        run_parallel(run_turboseti, (out_filelist, filelist), n_workers=args.nparallel)
    
