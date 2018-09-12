@@ -18,6 +18,29 @@ BEAM_MAPPING = beam_mapping   # From config.py
 
 @task
 @parallel
+@hosts(mb_nodes)
+def run_compress_htr_data():
+    """ Convert hi-time res data to 8-bit Stokes-I and archival HDF5 format """
+    exe = '/home/obs/tiddalik/compress_psr_stokes/convert_htr_data_batch.py'
+    run("%s %s" % (DCPY, exe))
+
+@task
+@parallel
+@hosts(mb_nodes)#['blc01', 'blc02'])
+def run_gen_8bit_pksmb():
+    """ Run sumfil 8bitter on Parkes data in /datax/PKSMB/GUPPI """
+    indir  = '/datax/PKSMB/GUPPI/'
+    outdir = '/datax/PKSMB/GUPPI/'
+    ext = '0001.fil'
+    nparallel = 1
+    exe = '/home/pri229/tiddalik/gen_8bit_batch.py'
+    #print("%s; %s %s %s %s -e %s -n %i" % (LDL, DCPY, exe, indir, outdir, ext, nparallel))
+    run("%s %s %s %s -e %s -n %i" % (DCPY, exe, indir, outdir, ext, nparallel))
+
+
+
+@task
+@parallel
 @hosts(mb_nodes)#['blc01', 'blc02'])
 def run_turboseti_pksmb():
     """ Run turboSETI on Parkes data in /datax/PKSMB/GUPPI """
@@ -33,12 +56,12 @@ def run_turboseti_pksmb():
 @parallel
 @hosts(mb_nodes)#['blc01', 'blc02'])
 def run_turboseti():
-    """ Run turboSETI on Parkes data in /datax/PKSMB/GUPPI """
+    """ Run turboSETI on Parkes data in /datax/ and /datax2/ """
     #indir = '/mnt_bls3/datax3/holding'
     #outdir = '/mnt_bls3/datax2/users/pri229/rodeo'
     #indir  = '/datax/PKSMB/'
     #outdir = '/datax/PKSMB/'
-    indirs = ['/datax2/', '/datax2/PKSMB/']
+    indirs = ['/datax2/', '/datax2/PKSMB/', '/datax/', '/datax/PKSMB/']
     outdirs = indirs
     #indir  = '/datax2/'
     #outdir = '/datax2/'
