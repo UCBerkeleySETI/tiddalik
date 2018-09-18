@@ -13,7 +13,7 @@ from fabric.context_managers import hide, show
 import glob
 from datetime import datetime
 from config import *
-DCPY = 'source /home/pri229/tiddalik/env.bash; ' #ri229/urce /opt/pyve/activate dcpy; '
+DCPY = 'source /home/obs/tiddalik/env.bash; ' #ri229/urce /opt/pyve/activate dcpy; '
 BEAM_MAPPING = beam_mapping   # From config.py
 
 @task
@@ -33,7 +33,7 @@ def run_gen_8bit_pksmb():
     outdir = '/datax/PKSMB/GUPPI/'
     ext = '0001.fil'
     nparallel = 1
-    exe = '/home/pri229/tiddalik/gen_8bit_batch.py'
+    exe = '/home/obs/tiddalik/gen_8bit_batch.py'
     #print("%s; %s %s %s %s -e %s -n %i" % (LDL, DCPY, exe, indir, outdir, ext, nparallel))
     run("%s %s %s %s -e %s -n %i" % (DCPY, exe, indir, outdir, ext, nparallel))
 
@@ -48,7 +48,7 @@ def run_turboseti_pksmb():
     outdir = '/datax/PKSMB/GUPPI/'
     ext = '0000.fil'
     nparallel = 8
-    exe = '/home/pri229/tiddalik/turboseti_batch_single_folder.py'
+    exe = '/home/obs/tiddalik/turboseti_batch_single_folder.py'
     #print("%s; %s %s %s %s -e %s -n %i" % (LDL, DCPY, exe, indir, outdir, ext, nparallel))
     run("%s %s %s %s -e %s -n %i" % (DCPY, exe, indir, outdir, ext, nparallel))
 
@@ -70,7 +70,7 @@ def run_turboseti():
         #ext = '0000.fil'
         ext = 'hires.hdf'
         nparallel = 8
-        exe = '/home/pri229/tiddalik/turboseti_batch.py'
+        exe = '/home/obs/tiddalik/turboseti_batch.py'
         #print("%s; %s %s %s %s -e %s -n %i" % (LDL, DCPY, exe, indir, outdir, ext, nparallel))
         run("%s %s %s %s -e %s -n %i" % (DCPY, exe, indir, outdir, ext, nparallel))
  

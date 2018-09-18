@@ -9,7 +9,8 @@ from blimpy.sigproc import generate_sigproc_header
 import time
 import os
 
-SIGPROC_PATH = '/usr/local/sigproc/bin/'
+#SIGPROC_PATH = '/usr/local/sigproc/bin/'
+SIGPROC_PATH = '/usr/bin/'
 SUM_FIL = os.path.join(SIGPROC_PATH, 'sum_fil')
 HEADER  = os.path.join(SIGPROC_PATH, 'header')
 
@@ -34,6 +35,8 @@ def convert_fil_to_archival(filename_in, h5_out, fb_out, scale_factor=10, gulp_s
         a0      = bl.Waterfall(filename_in, max_load=0)
         n_ints  = a0.n_ints_in_file
         n_gulps = int(n_ints / gulp_size)
+        if n_gulps == 0:
+            n_gulps = 1
         if n_ints % n_gulps != 0:
             n_gulps = int(n_ints / gulp_size) + 1
         n_chans = int(a0.header['nchans'])
