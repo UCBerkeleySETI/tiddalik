@@ -1,0 +1,15 @@
+Bootstrap: docker
+From: kernsuite/seti:latest
+
+%files
+    requant_utils/
+
+%post
+    docker-apt-install python-blimpy blimpy
+    docker-apt-install python-pip
+
+    pip install pybind11
+    cd requant_utils; python setup.py install
+
+%runscript
+    python /requant_utils/RAWchannel_extractor_QUANTIZE.py "$@"

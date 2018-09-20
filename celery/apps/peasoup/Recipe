@@ -1,0 +1,8 @@
+Bootstrap: docker
+From: kernsuite/seti:latest
+
+%post
+    docker-apt-install peasoup
+
+%runscript
+    peasoup "$@"
