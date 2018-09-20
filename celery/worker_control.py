@@ -17,26 +17,84 @@ def purge_all_pending():
 @parallel
 @hosts(config.nodes)
 def stop_worker():
-    """ Stop roachnest and jupyter servers """
+    """ Stop tiddalik worker """
     with warn_only():
         run("tmux kill-session -t tiddalik")
+
+
+@task
+@parallel
+@hosts(config.nodes)
+def stop_gpu_worker():
+    """ Stop tiddalik GPU worker """
+    with warn_only():
+        run("tmux kill-session -t tiddalik_gpu")
+
+@task
+@parallel
+@hosts(config.nodes)
+def stop_priority_worker():
+    """ Stop tiddalik priority worker """
+    with warn_only():
+        run("tmux kill-session -t tiddalik_priority")
 
 @task
 @parallel
 @hosts(config.nodes)
 def start_worker():
-	""" Start roachnest web gui and jupyter servers """
+	""" Start tiddalik worker """
 	with warn_only():
 		venv  = config.VIRTUALENV
 		tdir = config.RUN_DIR
-		#run("source {env} cd {tdir}; tmux new -d -s tiddalik './start_worker.py'".format(env=env, tdir=tdir))
 		run("{venv}; cd {tdir}; tmux new -d -s tiddalik 'python start_worker.py'".format(venv=venv, tdir=tdir))
+
+@task
+@parallel
+@hosts(config.nodes)
+def start_gpu_worker():
+	""" Start tiddalik GPU worker """
+	with warn_only():
+		venv  = config.VIRTUALENV
+		tdir = config.RUN_DIR
+		run("{venv}; cd {tdir}; tmux new -d -s tiddalik_gpu 'python start_worker_gpu.py'".format(venv=venv, tdir=tdir))
+
+@task
+@parallel
+@hosts(config.nodes)
+def start_priority_worker():
+	""" Start tiddalik priority worker """
+	with warn_only():
+		venv  = config.VIRTUALENV
+		tdir = config.RUN_DIR
+		run("{venv}; cd {tdir}; tmux new -d -s tiddalik_priority 'python start_worker_priority.py'".format(venv=venv, tdir=tdir))
 
 def start_workers():
     execute(start_worker)
 
 def stop_workers():
     execute(stop_worker)
+
+def start_gpu_workers():
+    execute(start_gpu_worker)
+
+def stop_gpu_workers():
+    execute(stop_gpu_worker)
+
+def start_priority_workers():
+    execute(start_priority_worker)
+
+def stop_priority_workers():
+    execute(stop_priority_worker)
+
+def start_all_workers():
+    execute(start_worker)
+    execute(start_priority_worker)
+    execute(start_gpu_worker)
+
+def stop_all_workers():
+    execute(stop_worker)
+    execute(stop_gpu_worker)
+    execute(stop_priority_worker)
 
 def print_header():
     hdr = """
@@ -58,12 +116,19 @@ def list_cmds():
     keys = sorted(cmds.keys())
     for key in keys:
         desc, cmd_fn = cmds[key]
-        print("%24s: %48s" % (key, desc))
+        print("%24s: %54s" % (key, desc))
 
 cmds = {
-    'start_workers': ['Start worker processes on compute nodes', start_workers],
-    'stop_workers': ['Stop all workers on compute nodes', stop_workers],
+    'start_cpu_workers': ['Start worker processes on compute nodes', start_workers],
+    'start_all_workers': ['Start *all* worker processes on compute nodes', start_all_workers],
+    'start_gpu_workers': ['Start GPU worker process (1 core) on compute nodes', start_gpu_workers],
+    'start_priority_workers': ['Start priority  worker process on compute nodes', start_priority_workers],
+    'stop_cpu_workers': ['Stop workers on compute nodes', stop_workers],
+    'stop_all_workers': ['Stop *all* workers on compute nodes', stop_all_workers],
+    'stop_gpu_workers': ['Stop all GPU workers on compute nodes', stop_gpu_workers],
+    'stop_priority_workers': ['Stop all priority workers on nodes', stop_priority_workers],
     'purge_all_pending': ['Purge all pending tasks in celery queue', purge_all_pending],
+    
 }
 
 if __name__ == "__main__":
