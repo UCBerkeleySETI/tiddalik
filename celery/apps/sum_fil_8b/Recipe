@@ -2,10 +2,10 @@ Bootstrap: docker
 From: kernsuite/seti:latest
 
 %files
-    convert_htr_data.py /code
+    sum_fil_8b.py /code
 
 %post
     docker-apt-install bl-sigproc blimpy python-blimpy
 
 %runscript
-    sum_fil "$@"
+    python /code/sum_fil_8b.py "$@"
