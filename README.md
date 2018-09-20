@@ -7,7 +7,17 @@ Parkes multi-node processing pipelines
 
 Tiddalik is a simple all-Python code to do run batch processing across nodes, where a
 single executable is run on different files in parallel (i.e. 'trivially/pleasingly' parallel). 
-The executable can be any bit of code that you can call from bash with command line arguments.
+
+## Tiddalik v2
+
+Tiddalik uses:
+* Python `celery` to execute tasks distributed over the cluster.
+* Python `fabric` with `tmux` to start workers on compute nodes.
+* `singularity` containers to encapsulate task pipelines.
+
+v2 is in active development, more details coming. v1 was non-ideal in terms of keyboard interrupts, logging, and monitoring, but it got simple jobs done. 
+
+## Tiddalik v1
 
 Tiddalik uses:
 * Python `subprocess` to execute a desired bash command.
