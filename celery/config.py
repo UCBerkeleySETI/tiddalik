@@ -21,7 +21,7 @@ RUN_DIR  = '/home/obs/tiddalik/celery'
 VIRTUALENV = 'source /opt/pyve/activate obs' 
 
 # Logfile path
-SINGULARITY_APP_DIR = '/home/obs/tiddalik/celery/'
+SINGULARITY_APP_DIR = '/home/obs/tiddalik/celery/apps/'
 LOG_PATH = '/home/obs/logs/tiddalik'
 
 
@@ -42,6 +42,16 @@ for node in nodes:
 
     app_queues.append(pq)
     app_routes[pn] = pr
+
+    pn = '{node}_single_cpu'
+    pq = Queue(pn, Exchange(pn), routing_key='{node}.#'.format(node=pn))
+    pr = {'queue': pn, 'routing_key': '{node}.#'.format(node=pn)}
+
+    app_queues.append(pq)
+    app_routes[pn] = pr
+
+
+
 
 app = Celery('tasks',
              backend=redis_db, 

@@ -41,6 +41,15 @@ def stop_priority_worker():
 @task
 @parallel
 @hosts(config.nodes)
+def stop_single_cpu_worker():
+    """ Stop tiddalik priority worker """
+    with warn_only():
+        run("tmux kill-session -t tiddalik_single_cpu")
+
+
+@task
+@parallel
+@hosts(config.nodes)
 def start_worker():
 	""" Start tiddalik worker """
 	with warn_only():
@@ -57,6 +66,16 @@ def start_gpu_worker():
 		venv  = config.VIRTUALENV
 		tdir = config.RUN_DIR
 		run("{venv}; cd {tdir}; tmux new -d -s tiddalik_gpu 'python start_worker_gpu.py'".format(venv=venv, tdir=tdir))
+
+@task
+@parallel
+@hosts(config.nodes)
+def start_single_cpu_worker():
+	""" Start tiddalik priority worker """
+	with warn_only():
+		venv  = config.VIRTUALENV
+		tdir = config.RUN_DIR
+		run("{venv}; cd {tdir}; tmux new -d -s tiddalik_single_cpu 'python start_worker_single_cpu.py'".format(venv=venv, tdir=tdir))
 
 @task
 @parallel
@@ -80,6 +99,12 @@ def start_gpu_workers():
 def stop_gpu_workers():
     execute(stop_gpu_worker)
 
+def start_single_cpu_workers():
+    execute(start_single_cpu_worker)
+
+def stop_single_cpu_workers():
+    execute(stop_single_cpu_worker)
+
 def start_priority_workers():
     execute(start_priority_worker)
 
@@ -89,11 +114,13 @@ def stop_priority_workers():
 def start_all_workers():
     execute(start_worker)
     execute(start_priority_worker)
+    execute(start_single_cpu_worker)
     execute(start_gpu_worker)
 
 def stop_all_workers():
     execute(stop_worker)
     execute(stop_gpu_worker)
+    execute(stop_single_cpu_worker)
     execute(stop_priority_worker)
 
 def print_header():
@@ -119,13 +146,15 @@ def list_cmds():
         print("%24s: %54s" % (key, desc))
 
 cmds = {
-    'start_cpu_workers': ['Start worker processes on compute nodes', start_workers],
+    'start_cpu_workers': ['Start CPU worker processes (8 core) on compute nodes', start_workers],
     'start_all_workers': ['Start *all* worker processes on compute nodes', start_all_workers],
     'start_gpu_workers': ['Start GPU worker process (1 core) on compute nodes', start_gpu_workers],
-    'start_priority_workers': ['Start priority  worker process on compute nodes', start_priority_workers],
+    'start_single_cpu_workers': ['Start CPU worker process (1 core) on compute nodes', start_single_cpu_workers],
+    'start_priority_workers': ['Start priority  worker process on compute nodes', start_single_cpu_workers],
     'stop_cpu_workers': ['Stop workers on compute nodes', stop_workers],
     'stop_all_workers': ['Stop *all* workers on compute nodes', stop_all_workers],
     'stop_gpu_workers': ['Stop all GPU workers on compute nodes', stop_gpu_workers],
+    'stop_single_cpu_workers': ['Stop all single CPU workers on compute nodes', stop_single_cpu_workers],
     'stop_priority_workers': ['Stop all priority workers on nodes', stop_priority_workers],
     'purge_all_pending': ['Purge all pending tasks in celery queue', purge_all_pending],
     

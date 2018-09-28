@@ -11,7 +11,7 @@ import glob
 import config
 from config import app
 from singularity import singularity_exec, singularity_run
-
+import socket
 
 def dispatch_to_node(taskfn, node_id, args=None, kwargs=None):
     """ Run a task on a given node via celery
@@ -24,6 +24,18 @@ def dispatch_to_node(taskfn, node_id, args=None, kwargs=None):
     d = taskfn.apply_async(args=args, kwargs=kwargs, queue=node_id, routing_key='{node_id}.run'.format(node_id=node_id))
     return d
 
+def dispatch_to_node_single_cpu(taskfn, node_id, args=None, kwargs=None):
+    """ Run a task on a given node via celery -- to priority worker
+
+    Args:
+        taskfn (app.task): A function decorated with celery's @app.task
+        node_id (str): Hostname on which to run the task
+        args (list): List of arguments to pass to the taskfn
+    """
+    q = '{n}_single_cpu'.format(n=node_id)
+    rk = '{q}.run'.format(q=q)
+    d = taskfn.apply_async(args=args, kwargs=kwargs, queue=q, routing_key=rk)
+    return d
 
 def dispatch_to_node_priority(taskfn, node_id, args=None, kwargs=None):
     """ Run a task on a given node via celery -- to priority worker
@@ -70,22 +82,62 @@ def get_filelist(path_to_files, file_ext):
     filelist = glob.glob(fpath)
     return filelist
 
+
+def file_rsync_blpd0(filename, prepend_hostname=True):
+    """ Upload a file to blpd0 using rsync """
+    if prepend_hostname:
+        host = socket.gethostname()
+        dn = os.path.dirname(filename)
+        bn = os.path.basename(filename)
+        filename_out = '{host}_{fn}'.format(host=host, fn=bn)
+    else:
+        filename_out = filename
+    print('rsync -av --progress {fn} rsync://blpd0.ssl.berkeley.edu/datax2/{fn_out}'.format(fn=filename, fn_out=filename_out))
+    retcode = os.system('rsync -av --progress {fn} rsync://blpd0.ssl.berkeley.edu/datax2/{fn_out}'.format(fn=filename, fn_out=filename_out))
+    return retcode
+
 @app.task
-def run_2b_extract(filename_in, f0=1420.5):
+def upload_to_blpd0(filename, prepend_hostname=True):
+    """ Upload a file to blpd0 using rsync """
+    return file_rsync_blpd0(filename, prepend_hostname=True) 
+
+@app.task
+def run_2b_extract(filename_in, f0=1420.5, upload=True, delete_after_upload=True):
     """ Run SETI@HOME 2-bit extraction code """
     img = 'setiathome/setiathome.simg'
-    img = os.path.join(config.SINULARITY_APP_DIR, img)
+    img = os.path.join(config.SINGULARITY_APP_DIR, img)
     fout = os.path.splitext(filename_in)[0] + 'f{f0}.raw2b'.format(f0=f0)
     args_str = '{filename} {f0} {fout}'.format(filename=filename_in, f0=f0, fout=fout)
     retcode = singularity_run(args_str, img=img)
-    return retcode
+    
+    is_deleted = False
+    retcode_up = -1
+    if retcode == 0 and upload is True:
+        retcode_up = file_rsync_blpd0(fout, prepend_hostname=True)
+    if retcode == 0 and retcode_up == 0 and delete_after_upload is True:
+        try:
+            os.remove(fout)
+            is_deleted = True
+        except:
+            is_deleted = False
+    return (retcode, retcode_up, is_deleted)
+
 
 @app.task
 def compress_htr_data(filename_in):
     """ Run compress HTR data pipeline """
     img = 'convert_htr_data/convert_htr.simg'
-    img = os.path.join(config.SINULARITY_APP_DIR, img)
+    img = os.path.join(config.SINGULARITY_APP_DIR, img)
     args_str = '{filename} -qdD'.format(filename=filename_in)
+    retcode = singularity_run(args_str, img=img)
+    return retcode  
+
+@app.task
+def run_turboseti(filename_in, outdir):
+    """ Run turboseti on data """
+    img = 'turboseti/turboseti.simg'
+    img = os.path.join(config.SINGULARITY_APP_DIR, img)
+    args_str = '{fn} -o {outdir}'.format(fn=filename_in, outdir=outdir)
     retcode = singularity_run(args_str, img=img)
     return retcode  
 
@@ -100,7 +152,7 @@ def run_sum_fil_8b(filename_in, ext_out='8b.fil', delete_orig=False, overwrite=F
         overwrite (bool): Overwrite existing output file, if it exists (default False)
     """
     img = 'sum_fil_8b/sum_fil_8b.simg'
-    img = os.path.join(config.SINULARITY_APP_DIR, img)
+    img = os.path.join(config.SINGULARITY_APP_DIR, img)
     args_str = '{filename} -e {ext}'.format(filename=filename_in, ext=ext_out)
     if delete_orig:
         args_str += ' -d'

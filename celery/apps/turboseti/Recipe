@@ -1,0 +1,11 @@
+Bootstrap: docker
+From: kernsuite/seti:latest
+
+%files
+    run_turboseti.py /code
+
+%post
+    docker-apt-install blimpy python-blimpy turbo-seti
+
+%runscript
+    python /code/run_turboseti.py "$@"
