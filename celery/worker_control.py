@@ -150,7 +150,7 @@ cmds = {
     'start_all_workers': ['Start *all* worker processes on compute nodes', start_all_workers],
     'start_gpu_workers': ['Start GPU worker process (1 core) on compute nodes', start_gpu_workers],
     'start_single_cpu_workers': ['Start CPU worker process (1 core) on compute nodes', start_single_cpu_workers],
-    'start_priority_workers': ['Start priority  worker process on compute nodes', start_single_cpu_workers],
+    'start_priority_workers': ['Start priority  worker process on compute nodes', start_priority_workers],
     'stop_cpu_workers': ['Stop workers on compute nodes', stop_workers],
     'stop_all_workers': ['Stop *all* workers on compute nodes', stop_all_workers],
     'stop_gpu_workers': ['Stop all GPU workers on compute nodes', stop_gpu_workers],

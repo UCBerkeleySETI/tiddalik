@@ -7,6 +7,7 @@ Tiddalik tasks for celery
 import time
 import os
 import glob
+import fnmatch
 
 import config
 from config import app
@@ -68,6 +69,25 @@ def gather_filelists(path_to_files, file_ext, timeout=10):
     if cnt > timeout:
         print("Warning: one or more nodes did not return a file listing.")
     return dd
+
+def gather_filelists_recursive(path_to_files, file_ext, timeout=60):
+    """ Gather filelists from all nodes
+
+    Uses get_filelist task.
+    """
+    dd = {}
+    for node in config.nodes:
+        dd[node] = dispatch_to_node_priority(get_filelist_recursive, node, args=(path_to_files, file_ext))
+    
+    cnt = 0.0
+    for node, ret in dd.items():
+        while ret.status != 'SUCCESS' and cnt <= timeout:
+            time.sleep(0.1)
+            cnt += 0.1
+        dd[node] = ret.result
+    if cnt > timeout:
+        print("Warning: one or more nodes did not return a file listing.")
+    return dd
  
 
 @app.task
@@ -81,6 +101,16 @@ def get_filelist(path_to_files, file_ext):
     fpath = os.path.join(path_to_files, '*.{ext}'.format(ext=file_ext.strip('.')))
     filelist = glob.glob(fpath)
     return filelist
+
+
+@app.task
+def get_filelist_recursive(path_to_files, file_ext):
+    """ Generate a list of files on which to run -- recursive """
+    matches = []
+    for root, dirnames, filenames in os.walk(path_to_files):
+        for filename in fnmatch.filter(filenames, '*.{ext}'.format(ext=file_ext)):
+                matches.append(os.path.join(root, filename))
+    return matches
 
 
 def file_rsync_blpd0(filename, prepend_hostname=True):
@@ -122,6 +152,12 @@ def run_2b_extract(filename_in, f0=1420.5, upload=True, delete_after_upload=True
             is_deleted = False
     return (retcode, retcode_up, is_deleted)
 
+@app.task
+def run_extract_21cm(filename_in):
+    """ Extract 21-cm line from multibeam hires file """
+    pyscript = os.path.join(config.SINGULARITY_APP_DIR, 'extract_21cm/extract_21cm.py')
+    retcode = os.system('python {py} {fn}'.format(py=pyscript, fn=filename_in))
+    return retcode
 
 @app.task
 def compress_htr_data(filename_in):
