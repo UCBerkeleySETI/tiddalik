@@ -35,6 +35,16 @@ def run_heimdall(filename_in):
     retcode = singularity_run(args_str, img=img)
     return retcode  
 
+
+@app.task
+def run_tommy_pipe_peasoup(filename_in):
+    """ Run turboseti on data """
+    exe = os.path.join('python /home/obs/tiddalik/celery/apps/peasoup2/ps.py')
+    retcode = os.system('{exe} {fn}'.format(exe=exe, fn=filename_in))
+    return retcode  
+
+
+
 if __name__ == "__main__":
     print("HI")
     #d = dispatch_to_node(compress_htr_data, 'blc01', args=['filename_test'])

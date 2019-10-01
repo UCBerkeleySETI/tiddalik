@@ -112,6 +112,27 @@ def get_filelist_recursive(path_to_files, file_ext):
                 matches.append(os.path.join(root, filename))
     return matches
 
+def rsync_file_to_host(filename, dest_host, dest_path, prepend_hostname=True):
+    """ Upload a file to blpd0 using rsync """
+    if prepend_hostname:
+        host = socket.gethostname()
+        dn = os.path.dirname(filename)
+        bn = os.path.basename(filename)
+        filename_out = '{host}_{fn}'.format(host=host, fn=bn)
+    else:
+        filename_out = filename
+    filepath_out = os.path.join(dest_path, filename_out).strip('/')
+
+    cmd = 'rsync -av --progress {fn} rsync://{host}/{path}'.format(fn=filename, host=dest_host, path=filepath_out)
+    print(cmd)
+    retcode = os.system(cmd)
+    return retcode
+
+@app.task
+def rsync_file(filename, dest_host, dest_path, prepend_hostname=True):
+    """ Upload a file to blpd0 using rsync """
+    return rsync_file_to_host(filename, dest_host, dest_path, prepend_hostname) 
+
 
 def file_rsync_blpd0(filename, prepend_hostname=True):
     """ Upload a file to blpd0 using rsync """
@@ -127,9 +148,19 @@ def file_rsync_blpd0(filename, prepend_hostname=True):
     return retcode
 
 @app.task
-def upload_to_blpd0(filename, prepend_hostname=True):
+def upload_to_blpd0(filename, prepend_hostname=True, delete=False):
     """ Upload a file to blpd0 using rsync """
-    return file_rsync_blpd0(filename, prepend_hostname=True) 
+    print "Uploading %s" % filename
+    ret = file_rsync_blpd0(filename, prepend_hostname=True) 
+    is_deleted = False
+    if delete is True and ret == 0:
+        try:
+            os.remove(filename)
+            is_deleted=True
+        except:
+            print "Couldn't delete %s" % filename
+            pass
+    return (ret, is_deleted)
 
 @app.task
 def run_2b_extract(filename_in, f0=1420.5, upload=True, delete_after_upload=True):
@@ -197,7 +228,50 @@ def run_sum_fil_8b(filename_in, ext_out='8b.fil', delete_orig=False, overwrite=F
     retcode = singularity_run(args_str, img=img)
     return retcode
 
+@app.task
+def safe_delete_post_turboseti(filename_in):
+    """ Delete 0000.fil file iff 0000.h5 exists and turboseti has run 
+    
+    Args: filename_in (str): Name of 0000.fil file to check
 
+    Notes: checkes for .h5, .dat and .turboseti.complete
+    """
+    fbase = os.path.splitext(filename_in)[0]
+    fn_h5 = fbase + '.h5'
+    fn_dat = fbase + '.dat'
+    fn_comp = fbase + '.turboseti.complete'
+    exists = os.path.exists
+    if exists(fn_h5) and  exists(fn_dat) and exists(fn_comp):
+        h5_size = os.path.getsize(fn_h5)
+        fil_size = os.path.getsize(filename_in)
+        if h5_size * 2.0 > fil_size:
+            print("ALL OK: %s" % filename_in)
+            os.remove(filename_in)
+            return("ALL OK: %s" % filename_in)
+        else:
+            print("FSIZE NOT OK: %s" % filename_in)
+            return("FSIZE NOT OK: %s" % filename_in)
+    else:
+        print("NOT OK: %s" % filename_in)
+        return("NOT OK: %s" % filename_in)
+
+@app.task
+def run_tommy_pipe_rfifind(filename_in):
+    """ Run turboseti on data """
+    img = 'tommy_pipe/tommy_pipe.simg'
+    img = os.path.join(config.SINGULARITY_APP_DIR, img)
+    args_str = '{fn}'.format(fn=filename_in)
+    retcode = singularity_run(args_str, img=img, app='rfifind')
+    return retcode  
+
+@app.task
+def run_tommy_pipe_prepfold(filename_in):
+    """ Run turboseti on data """
+    img = 'tommy_pipe/tommy_pipe.simg'
+    img = os.path.join(config.SINGULARITY_APP_DIR, img)
+    args_str = '{fn}'.format(fn=filename_in)
+    retcode = singularity_run(args_str, img=img, app='prepfold')
+    return retcode  
 
 
 if __name__ == "__main__":
