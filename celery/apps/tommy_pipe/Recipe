@@ -1,0 +1,17 @@
+bootstrap: docker
+From: kernsuite/seti:latest
+
+%files
+    code /
+
+%post
+    docker-apt-install dspsr bl-sigproc blimpy python-blimpy
+
+%runscript
+    /code/rfi_filter_tm.py -fil "$@" -time 10.0 -timesig 5.0 -freqsig 4.0 -chanfrac 0.7 -intfrac 0.3 -max_percent 20.0
+
+%apprun prepfold
+    exec /code/run_prepfold.py "$@"
+
+%apprun rfifind
+    exec /code/rfi_filter_tm.py -fil "$@" -time 10.0 -timesig 5.0 -freqsig 4.0 -chanfrac 0.7 -intfrac 0.3 -max_percent 20.0
